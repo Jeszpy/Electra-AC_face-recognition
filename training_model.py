@@ -6,7 +6,7 @@ from datetime import datetime
 import firebirdsql
 import pyodbc
 import fdb
-
+import os
 
 # This is a demo of running face recognition on live video from your webcam. It's a little more complicated than the
 # other example, but it includes some basic performance tweaks to make things run a lot faster:
@@ -16,35 +16,42 @@ import fdb
 # PLEASE NOTE: This example requires OpenCV (the `cv2` library) to be installed only to read from your webcam.
 # OpenCV is *not* required to use the face_recognition library. It's only required if you want to run this
 # specific demo. If you have trouble installing it, try any of the other demos that don't require it instead.
-def start():
-    video_capture = cv2.VideoCapture(0)
 
-    # Load a sample picture and learn how to recognize it.
-    hleb_image = face_recognition.load_image_file("template/Hleb.jpg")
-    hleb_face_encoding = face_recognition.face_encodings(hleb_image)[0]
+# video_capture = cv2.VideoCapture("rtsp://admin:belprom1@192.168.1.64:554/out.h264")
+con = fdb.connect(dsn='127.0.0.1:C:/Electra/El-Ac/train.fdb',
+                  user='SYSDBA',
+                  password='masterkey',
+                  charset='WIN1251')
+cur = con.cursor()
 
-    nick_image = face_recognition.load_image_file("template/Nick.jpg")
-    nick_face_encoding = face_recognition.face_encodings(nick_image)[0]
+video_capture = cv2.VideoCapture(0)
 
-    # Load a second sample picture and learn how to recognize it.
-    jenya_image = face_recognition.load_image_file("template/Jenya.jpg")
-    jenya_face_encoding = face_recognition.face_encodings(jenya_image)[0]
+# Load a sample picture and learn how to recognize it.
+hleb_image = face_recognition.load_image_file("template/Hleb.jpg")
+hleb_face_encoding = face_recognition.face_encodings(hleb_image)[0]
 
-    roma_image = face_recognition.load_image_file("template/Roma.jpg")
-    roma_face_encoding = face_recognition.face_encodings(roma_image)[0]
+nick_image = face_recognition.load_image_file("template/Nick.jpg")
+nick_face_encoding = face_recognition.face_encodings(nick_image)[0]
 
-    known_face_encodings = [
-        hleb_face_encoding,
-        nick_face_encoding,
-        jenya_face_encoding,
-        roma_face_encoding
-    ]
-    known_face_names = [
-        "Hleb",
-        "Nickolay",
-        "Jenya",
-        "Roman"
-    ]
+# Load a second sample picture and learn how to recognize it.
+jenya_image = face_recognition.load_image_file("template/Jenya.jpg")
+jenya_face_encoding = face_recognition.face_encodings(jenya_image)[0]
+
+roma_image = face_recognition.load_image_file("template/Roma.jpg")
+roma_face_encoding = face_recognition.face_encodings(roma_image)[0]
+
+known_face_encodings = [
+    hleb_face_encoding,
+    nick_face_encoding,
+    jenya_face_encoding,
+    roma_face_encoding
+]
+known_face_names = [
+    "Hleb",
+    "Nickolay",
+    "Jenya",
+    "Roman"
+]
 
 
 def recognition():
@@ -127,38 +134,42 @@ def recognition():
     # cv2.destroyAllWindows()
 
 
-def firebird():
-    con = fdb.connect(dsn='127.0.0.1:C:/Electra/El-Ac/train.fdb',
-                      user='SYSDBA',
-                      password='masterkey',
-                      charset='WIN1251')
-    cur = con.cursor()
-    cur.execute("select NUM from EVENTS")
-    fetch = cur.fetchone()
-    x = 0
-    while (cur.fetchone() != None):
-        x += 1
-        # fetch = cur.fetchone()
-    print(x)
-    f = cur.fetchall(x)
-    print(f)
+def add_event(name_id):
+    select = "select max(num) +1 as NUM from EVENTS"
+    cur.execute(select)
+    num = cur.fetchone()[0]
+    date_and_time = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
+    cur.execute(f"insert into EVENTS values {(num, date_and_time, 2, 400, 38, name_id, 0, 0, 0)}")
+    con.commit()
 
+
+def open_door(adress):
+    # select = "select max(id) +1 as ID from d_commands"
+    # cur.execute(select)
+    # num = cur.fetchone()[0]
     # date_and_time = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
-    #
-    #
-    # insert_info = [(num, date_and_time, 2, 400, 36, 0, 0, 6513520, 0)]
-    # cur.executemany("insert into EVENTS (NUM, DATETIME, SYSTEM_TYPE, EVENT_TYPE, PARAM1, PARAM2, PARAM3, PARAM4, PARAM5) values (?, ?, ?, ?, ?, ?, ?, ?, ?)",
-    #                 insert_info)
-    #
-    # con.commit()
-    print(fetch)
-    con.close()
+    cur.execute(f"insert into d_commands (name, year_released) values ('C',        1972)")
+    cur.execute(f"insert into d_commands values {( 1, 'open_door,0', adress)}")
+    con.commit()
+    print('открыл')
 
-# while True:
-#     print('im ready')
-#     text = input()
-#     if text == '':
-#         name = recognition()
+    # while True:
+    #     print('im ready')
+    #     text = input()
+    #     if text == '':
+    #             name_id = ''
+    #             name = recognition()
+    #             if name == 'Hleb':
+    #                 name_id = 5118
+    #             elif name == 'Nickolay':
+    #                 name_id = 5119
+    #             elif name == 'Jenya':
+    #                 name_id = 5134
+    #             elif name == 'Roma':
+    #                 name_id = 5123
+    #             add_event(name_id)
+    # con.close()
 
-
-firebird()
+# recognition()
+# add_event(5118)
+open_door(-1062731554)
