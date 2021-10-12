@@ -1,20 +1,28 @@
-from firebird.driver import connect, DESCRIPTION_NAME, DESCRIPTION_DISPLAY_SIZE
+from datetime import datetime
+import fdb
+import time
 
-TABLE_NAME = 'events'
-SELECT = f'select num from {TABLE_NAME}'
 
-con = connect('train.fdb', user='sysdba', password='masterkey')
+default = None
+action = 'open_door, 0'
+
+start = time.time()
+con = fdb.connect(dsn='127.0.0.1:C:/Electra/El-Ac/train.fdb',
+                  user='SYSDBA',
+                  password='masterkey',
+                  charset='WIN1251')
+end = time.time() - start
+print(f'Коннект за {end}')
 
 cur = con.cursor()
-cur.execute(SELECT)
+select = "select max(id) +1 as ID from d_commands"
+cur.execute(select)
+num = cur.fetchone()[0]
+date_and_time = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
+
+cur.execute(f"insert into d_commands (executor, text, phis_addr) values ({int(1)}, {str(action)}, {int(-1062731554)})")
+
+cur.execute(f"insert into d_commands values {(num, date_and_time, 1, 'open_door,0', -1062731554)}")
 
 
-fieldIndices = range(len(cur.description))
-for row in cur:
-    for fieldIndex in fieldIndices:
-        fieldValue = str(row[fieldIndex])
-        fieldMaxWidth = cur.description[fieldIndex][DESCRIPTION_DISPLAY_SIZE]
-
-        print(fieldValue.ljust(fieldMaxWidth), end='')
-
-    print() # Finish the row with a newline
+con.commit()

@@ -143,13 +143,13 @@ def add_event(name_id):
     con.commit()
 
 
-def open_door(adress):
+def open_door(address):
     # select = "select max(id) +1 as ID from d_commands"
     # cur.execute(select)
     # num = cur.fetchone()[0]
-    # date_and_time = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
-    cur.execute(f"insert into d_commands (name, year_released) values ('C',        1972)")
-    cur.execute(f"insert into d_commands values {( 1, 'open_door,0', adress)}")
+    date_and_time = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
+    cur.execute(f'insert into d_commands (executor, text, phis_addr) values (1, "open_door, 0", {address})')
+    # cur.execute(f"insert into d_commands values {(num, date_and_time, 1, 'open_door,0', adress)}")
     con.commit()
     print('открыл')
 
