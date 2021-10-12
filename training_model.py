@@ -2,6 +2,7 @@ import face_recognition
 import cv2
 import numpy as np
 import time
+from datetime import datetime
 import firebirdsql
 import pyodbc
 import fdb
@@ -127,15 +128,31 @@ def recognition():
 
 
 def firebird():
-    con = fdb.connect(dsn='localhost:D:/Dev/Python/Electra-AC_face-recognition/train.fdb', user='sysdba',
-                      password='masterkey')
+    con = fdb.connect(dsn='127.0.0.1:C:/Electra/El-Ac/train.fdb',
+                      user='SYSDBA',
+                      password='masterkey',
+                      charset='WIN1251')
     cur = con.cursor()
-    cur.execute("select * from USERS")
-    test = cur.fetchall()
-    print(test)
+    cur.execute("select NUM from EVENTS")
+    fetch = cur.fetchone()
+    x = 0
+    while (cur.fetchone() != None):
+        x += 1
+        # fetch = cur.fetchone()
+    print(x)
+    f = cur.fetchall(x)
+    print(f)
 
-    print('ok')
-
+    # date_and_time = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
+    #
+    #
+    # insert_info = [(num, date_and_time, 2, 400, 36, 0, 0, 6513520, 0)]
+    # cur.executemany("insert into EVENTS (NUM, DATETIME, SYSTEM_TYPE, EVENT_TYPE, PARAM1, PARAM2, PARAM3, PARAM4, PARAM5) values (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+    #                 insert_info)
+    #
+    # con.commit()
+    print(fetch)
+    con.close()
 
 # while True:
 #     print('im ready')
