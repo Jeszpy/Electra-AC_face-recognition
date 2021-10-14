@@ -22,9 +22,12 @@ con = fdb.connect(dsn='127.0.0.1:C:/Electra/El-Ac/train.fdb',
                   user='SYSDBA',
                   password='masterkey',
                   charset='WIN1251')
-cur = con.cursor()
 
-video_capture = cv2.VideoCapture(0)
+# video_capture = cv2.VideoCapture(0)
+os.environ['OPENCV_FFMPEG_CAPTURE_OPTIONS'] = "rtsp_transport;udp"
+rtsp = "rtsp://admin:belprom1@192.168.1.64:554/onvif1"
+
+video_capture = cv2.VideoCapture(rtsp, cv2.CAP_FFMPEG)
 
 # Load a sample picture and learn how to recognize it.
 hleb_image = face_recognition.load_image_file("template/Hleb.jpg")
@@ -135,41 +138,61 @@ def recognition():
 
 
 def add_event(name_id):
-    select = "select max(num) +1 as NUM from EVENTS"
-    cur.execute(select)
-    num = cur.fetchone()[0]
-    date_and_time = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
-    cur.execute(f"insert into EVENTS values {(num, date_and_time, 2, 400, 38, name_id, 0, 0, 0)}")
-    con.commit()
+    try:
+        cur = con.cursor()
+        cur.execute(
+            f"insert into events (system_type, event_type, param1, param2) values ({int(2)}, {int(400)}, {int(38)}, {int(name_id)})")
+        con.commit()
+    except Exception as e:
+        print(e)
+    finally:
+        # con.close()
+        pass
 
 
-def open_door(address):
-    # select = "select max(id) +1 as ID from d_commands"
-    # cur.execute(select)
-    # num = cur.fetchone()[0]
-    date_and_time = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
-    cur.execute(f'insert into d_commands (executor, text, phis_addr) values (1, "open_door, 0", {address})')
-    # cur.execute(f"insert into d_commands values {(num, date_and_time, 1, 'open_door,0', adress)}")
-    con.commit()
-    print('открыл')
+# def open_door(address):
+#     # select = "select max(id) +1 as ID from d_commands"
+#     # cur.execute(select)
+#     # num = cur.fetchone()[0]
+#     date_and_time = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
+#     cur.execute(f'insert into d_commands (executor, text, phis_addr) values (1, "open_door, 0", {address})')
+#     # cur.execute(f"insert into d_commands values {(num, date_and_time, 1, 'open_door,0', adress)}")
+#     con.commit()
+#     print('открыл')
 
-    # while True:
-    #     print('im ready')
-    #     text = input()
-    #     if text == '':
-    #             name_id = ''
-    #             name = recognition()
-    #             if name == 'Hleb':
-    #                 name_id = 5118
-    #             elif name == 'Nickolay':
-    #                 name_id = 5119
-    #             elif name == 'Jenya':
-    #                 name_id = 5134
-    #             elif name == 'Roma':
-    #                 name_id = 5123
-    #             add_event(name_id)
-    # con.close()
+
+def open_door(address, action):
+    try:
+        cur = con.cursor()
+        cur.execute(
+            f"insert into d_commands (executor, text, phis_addr) values ({int(1)}, '{str(action)}', {int(address)})")
+        con.commit()
+    except Exception as e:
+        print(e)
+        # pass
+
+    finally:
+        # con.close()
+        pass
+
+
+while True:
+    print('im ready')
+    text = input()
+    if text == '':
+        name_id = ''
+        name = recognition()
+        open_door(-1062731554, 'open_door, 0')
+        if name == 'Hleb':
+            name_id = 5118
+        elif name == 'Nickolay':
+            name_id = 5119
+        elif name == 'Jenya':
+            name_id = 5134
+        elif name == 'Roma':
+            name_id = 5123
+        add_event(name_id)
 
 # recognition()
 # add_event(5118)
-open_door(-1062731554)
+# open_door(-1062731554, 'open_door, 0')
